@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QLabel>
+#include <QTimer>
 
 #include <gphoto2/gphoto2-abilities-list.h>
 #include <gphoto2/gphoto2-camera.h>
@@ -18,6 +19,8 @@ signals:
 
 public slots:
     void takePicture();
+    void takePreview();
+    void togglePreview();
 
 protected:
     CameraAbilitiesList *al;
@@ -35,9 +38,14 @@ protected:
 
     QLabel label;
 
+    QTimer previewTimer;
+
 private:
     bool initCamera();
     void closeCamera();
+
+    void startPreview();
+    void stopPreview();
 };
 
 #endif // MAINWINDOW_H
