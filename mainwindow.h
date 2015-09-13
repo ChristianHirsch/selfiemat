@@ -1,12 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "eye.h"
+
+#include <vector>
+
 #include <QWidget>
 #include <QLabel>
 #include <QTimer>
-
-#include <gphoto2/gphoto2-abilities-list.h>
-#include <gphoto2/gphoto2-camera.h>
 
 class MainWindow : public QWidget
 {
@@ -18,31 +19,22 @@ public:
 signals:
 
 public slots:
-    void takePicture();
-    void takePreview();
+    void updatePreview();
     void togglePreview();
 
+    void startScene();
+    void takeScenePicture();
+    void endScene();
+
 protected:
-    CameraAbilitiesList *al;
-    CameraAbilities a;
-    GPPortInfoList *il;
-    GPPortInfo info;
-    GPContext *cameraContext;
-
-    CameraFilePath path;
-    CameraFile *file;
-    Camera *camera;
-
-    const char *data;
-    unsigned long size;
-
+    Eye eye;
     QLabel label;
 
     QTimer previewTimer;
+    QTimer sceneTimer;
 
 private:
-    bool initCamera();
-    void closeCamera();
+    std::vector<QImage> scene;
 
     void startPreview();
     void stopPreview();

@@ -7,19 +7,25 @@
 QT       += core
 QT       += gui
 QT       += widgets
+QT       += printsupport
 
 TARGET = selfiemat
-CONFIG   += console
-CONFIG   -= app_bundle
+CONFIG += console
+CONFIG -= app_bundle
+CONFIG += c++11
 
 TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    photo.cpp \
+    eye.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    photo.h \
+    eye.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libgphoto2
