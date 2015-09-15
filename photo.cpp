@@ -1,8 +1,9 @@
 #include "photo.h"
 
 #include <string>
+
 #include <QPrinter>
-#include <QTextDocument>
+#include <QPainter>
 
 Photo::Photo()
 {
@@ -28,7 +29,34 @@ void Photo::save(const std::string &_path)
 {
     using namespace std;
 
-    QTextDocument document;
+    paintImage();
+    createDocument();
+
+    QPrinter printer;
+
+    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOrientation(QPrinter::Landscape);
+
+    printer.setOutputFileName(_path.c_str());
+    printer.setOutputFormat(QPrinter::PdfFormat);
+
+    printer.setFullPage(true);
+    document.print(&printer);
+}
+
+void Photo::print()
+{
+
+}
+
+void Photo::createDocument()
+{
+    using namespace std;
+
+    document.clear();
+    document.setIndentWidth(0);
+    document.setDocumentMargin(0);
 
     string html =  "<table width=\"100%\"><tr>";
 
@@ -41,27 +69,43 @@ void Photo::save(const std::string &_path)
         string fileName = "/tmp/photo_" + to_string(counter) + ".png";
         image.save(fileName.c_str());
 
-        html += "<td><img width=\"450\" src=\""
-                + fileName
-                + "\"></td>";
+        html += "<td>"
+                "<img width=\"450\" src=\"" + fileName + "\">"
+                "</td>";
 
         counter++;
     }
     html += "</tr></table>";
 
-    document.setHtml(html.c_str());
+    /*
+    html += "<img style=\"position: absolute; top: 0px; left: 0px\""
+            "src=\"/home/worker/frame.png\">";
+            */
 
-    QPrinter printer;
-    printer.setOutputFileName(_path.c_str());
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setPaperSize(QPrinter::A4);
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setFullPage(true);
-    document.print(&printer);
+    document.setHtml(html.c_str());
 }
 
-void Photo::print()
+void Photo::paintImage()
 {
+    float scale = (float)2048 / images[0].width();
 
+    QImage img(2048, round(scale * (float)images[1].height()),
+            QImage::Format_ARGB32);
+    QImage background("/home/worker/halloween_frame.png");
+
+    QPainter painter;
+    painter.begin(&img);
+    painter.drawImage(QRectF(0.0, 0.0, img.width()/2, img.height()/2),
+                      images[0]);
+    painter.drawImage(QRectF(img.width()/2, 0.0, img.width()/2, img.height()/2),
+                      images[1]);
+    painter.drawImage(QRectF(0.0, img.height()/2, img.width()/2, img.height()/2),
+                      images[2]);
+    painter.drawImage(QRectF(img.width()/2, img.height()/2, img.width()/2, img.height()/2),
+                      images[3]);
+    painter.drawImage(img.rect(), background);
+    painter.end();
+
+    img.save("/tmp/img.png");
 }
 

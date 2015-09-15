@@ -82,7 +82,7 @@ void MainWindow::endScene()
 
 void MainWindow::startPreview()
 {
-    previewTimer.start(100);
+    previewTimer.start(1000);
 }
 
 void MainWindow::stopPreview()

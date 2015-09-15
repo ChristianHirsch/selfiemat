@@ -1,8 +1,10 @@
 #ifndef PHOTO_H
 #define PHOTO_H
 
-#include <QImage>
 #include <vector>
+
+#include <QImage>
+#include <QTextDocument>
 
 class Photo
 {
@@ -18,6 +20,11 @@ public:
 private:
 
     std::vector<QImage> images;
+    QTextDocument document;
+    QImage image;
+
+    void createDocument();
+    void paintImage();
 };
 
 #endif // PHOTO_H
