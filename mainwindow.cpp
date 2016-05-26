@@ -4,37 +4,34 @@
 
 #include <stdio.h>
 
+#include <QDateTime>
 #include <QImage>
 #include <QVBoxLayout>
 #include <QPushButton>
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
-    bool camInit = eye.initCamera();
-
     QVBoxLayout *layout = new QVBoxLayout;
     setLayout(layout);
 
     layout->addWidget(&label);
     label.setMinimumSize(800, 600);
 
-    QPushButton *previewBtn = new QPushButton;
+    previewBtn = new QPushButton;
     previewBtn->setText("Preview");
     connect(previewBtn, SIGNAL(clicked()), this, SLOT(togglePreview()));
-    previewBtn->setEnabled(camInit);
+    previewBtn->setEnabled(false);
     layout->addWidget(previewBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
-    QPushButton *captureBtn = new QPushButton;
+    captureBtn = new QPushButton;
     captureBtn->setText("Cheese!");
     connect(captureBtn, SIGNAL(clicked()), this, SLOT(startScene()));
-    captureBtn->setEnabled(camInit);
+    captureBtn->setEnabled(false);
     layout->addWidget(captureBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
-
-    // D E B U G
-    Photo photo;
-    photo.save("/home/worker/img.pdf");
+    connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
+    camInitTimer.start(1000);
 }
 
 MainWindow::~MainWindow()
@@ -55,9 +52,21 @@ void MainWindow::togglePreview()
         startPreview();
 }
 
+void MainWindow::findAndInitCamera()
+{
+    if(!eye.initCamera())
+        return;
+
+    previewBtn->setEnabled(true);
+    captureBtn->setEnabled(true);
+
+    camInitTimer.stop();
+}
+
 void MainWindow::startScene()
 {
     disconnect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
+    scene.empty();
     sceneTimer.start(1500);
     connect(&sceneTimer, SIGNAL(timeout()), this, SLOT(takeScenePicture()));
 }
@@ -79,14 +88,18 @@ void MainWindow::endScene()
 
     Photo photo;
     photo.addImage(scene);
-    photo.save("/tmp/photo.pdf");
+    QString fileName = "/home/foreman/"
+            + QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
+    photo.saveImages(fileName.toStdString());
+    photo.setFileName(fileName);
+    photo.save(fileName.toStdString() + ".pdf");
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
 }
 
 void MainWindow::startPreview()
 {
-    previewTimer.start(1000);
+    previewTimer.start(200);
 }
 
 void MainWindow::stopPreview()

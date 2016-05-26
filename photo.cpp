@@ -2,13 +2,24 @@
 
 #include <string>
 
+#include <QDir>
 #include <QPrinter>
 #include <QPrintDialog>
 #include <QPainter>
+#include <QDateTime>
 
 Photo::Photo()
 {
+    pageHeight = 100.0f;
+    pageWidth = 148.0f;
 
+    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer.setFullPage(true);
+    printer.setPageSizeMM(QSizeF(pageHeight, pageWidth));
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setCopyCount(1);
+
+    printer.setFullPage(true);
 }
 
 Photo::~Photo()
@@ -26,53 +37,84 @@ void Photo::addImage(const std::vector<QImage> &_images)
     images.insert(images.end(), _images.begin(), _images.end());
 }
 
+void Photo::saveImages(const std::string &_fileLocations)
+{
+    QDir dir(QString::fromStdString(_fileLocations));
+    if(dir.exists(QString::fromStdString(_fileLocations)))
+        dir.mkdir(QString::fromStdString(_fileLocations));
+
+    int i=0;
+    for(const QImage &img : images )
+    {
+        img.save(getFileName() + "/" + i + ".png");
+        i++;
+    }
+}
+
 void Photo::save(const std::string &_path)
 {
     using namespace std;
 
-    //paintImage();
+    paintImage();
     createDocument();
 
     QPrinter printer;
-    QPrintDialog *dialog = new QPrintDialog(&printer);
-    dialog->setWindowTitle("Print Image");
-    //dialog->addEnabledOption(QAbstractPrintDialog::PrintSelection);
-    if(dialog->exec() != QDialog::Accepted)
-        return;
 
-    printf("Printer name: %s\n", printer.printerName().toStdString().c_str());
-
-    /*
     printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer.setPageSizeMM(QSizeF(102.0,152.0));
-    printer.setOrientation(QPrinter::Landscape);
+    printer.setPageSizeMM(QSizeF(pageHeight, pageWidth));
     printer.setOrientation(QPrinter::Landscape);
     printer.setFullPage(true);
 
-    //printer.setOutputFileName(_path.c_str());
-    //printer.setOutputFormat(QPrinter::PdfFormat);
-    */
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(_path.c_str());
 
     document.print(&printer);
 }
 
 void Photo::print()
 {
-    QPrinter printer;
-
-    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer.setFullPage(true);
-    printer.setPageSizeMM(QSizeF(102.0,152.0));
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setCopyCount(1);
-
-    /*
-    printer.setOutputFileName(_path.c_str());
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    */
-
-    printer.setFullPage(true);
     document.print(&printer);
+}
+
+QString Photo::getFileName() const
+{
+    return fileName;
+}
+
+void Photo::setFileName(const QString &value)
+{
+    fileName = value;
+}
+
+void Photo::selectPrinter()
+{
+    QPrintDialog *dialog = new QPrintDialog(&printer);
+    dialog->setWindowTitle("Print Image");
+    dialog->addEnabledOption(QAbstractPrintDialog::PrintSelection);
+    if(dialog->exec() != QDialog::Accepted)
+        return;
+
+    printf("Selected printer: %s\n", printer.printerName().toStdString().c_str());
+}
+
+float Photo::getPageWidth() const
+{
+    return pageWidth;
+}
+
+void Photo::setPageWidth(float value)
+{
+    pageWidth = value;
+}
+
+float Photo::getPageHeight() const
+{
+    return pageHeight;
+}
+
+void Photo::setPageHeight(float value)
+{
+    pageHeight = value;
 }
 
 void Photo::createDocument()
@@ -82,9 +124,11 @@ void Photo::createDocument()
     document.clear();
     document.setIndentWidth(0);
     document.setDocumentMargin(0);
-    document.setPageSize(QSize(152.0, 102));
+    document.setPageSize(QSize(pageWidth, pageHeight));
 
-    string html = "<img width=152 height=102 src=\"/home/worker/img.png\">";
+    string html = "<img width=" + to_string(pageWidth)
+            + " height=" + to_string(pageHeight)
+            + " src=\"" + getFileName().toStdString() + ".png\">";
     /*
     string html =  "<table width=\"100%\"><tr>";
     int counter = 0;
@@ -119,7 +163,7 @@ void Photo::paintImage()
 
     QImage img(2048, round(scale * (float)images[1].height()),
             QImage::Format_ARGB32);
-    QImage background("/home/worker/halloween_frame.png");
+    QImage background("/home/foreman/Downloads/hochzeit_rahmen.png");
 
     QPainter painter;
     painter.begin(&img);
@@ -134,6 +178,6 @@ void Photo::paintImage()
     painter.drawImage(img.rect(), background);
     painter.end();
 
-    img.save("/tmp/img.png");
+    img.save(getFileName() + ".png");
 }
 

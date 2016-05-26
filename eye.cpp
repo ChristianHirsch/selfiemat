@@ -31,7 +31,7 @@ QImage Eye::takePicture()
 
     rc = gp_file_get_data_and_size(file, &data, &size);
     if(rc != 0)
-        printf("Error getting data; code %i: %s", rc, gp_result_as_string(rc));
+        printf("Error getting data; code %i: %s\n", rc, gp_result_as_string(rc));
 
     QImage image = QImage::fromData((uchar*) data, size);
 
@@ -46,15 +46,15 @@ QImage Eye::takePreview()
 
     rc = gp_file_new(&file);
     if(rc != 0)
-        printf("Error creating file; code %i: %s", rc, gp_result_as_string(rc));
+        printf("Error creating file; code %i: %s\n", rc, gp_result_as_string(rc));
 
     rc = gp_camera_capture_preview(camera, file, cameraContext);
     if(rc != 0)
-        printf("Error capturing preview; code %i: %s", rc, gp_result_as_string(rc));
+        printf("Error capturing preview; code %i: %s\n", rc, gp_result_as_string(rc));
 
     rc = gp_file_get_data_and_size(file, &data, &size);
     if(rc != 0)
-        printf("Error getting data; code %i: %s", rc, gp_result_as_string(rc));
+        printf("Error getting data; code %i: %s\n", rc, gp_result_as_string(rc));
 
     QImage image = QImage::fromData((uchar*) data, size).mirrored(true, false);
 
@@ -68,8 +68,8 @@ bool Eye::initCamera()
     gp_camera_new(&camera);
     cameraContext = gp_context_new();
 
-    //gp_context_set_error_func(gpc, error_func, NULL);
-    //gp_context_set_message_func(gpc, message_func, NULL);
+    //gp_context_set_error_func(cameraContext, error_func, NULL);
+    //gp_context_set_message_func(cameraContext, message_func, NULL);
 
     printf("Camera init. Can take more than 10 seconds depending on the "
            "memory card's contents (remove card from camera to speed up).\n");
@@ -89,7 +89,7 @@ bool Eye::initCamera()
 
 void Eye::closeCamera()
 {
-    printf("Closing camera ...");
+    printf("Closing camera ...\n");
 
     // close camera
     gp_camera_unref(camera);

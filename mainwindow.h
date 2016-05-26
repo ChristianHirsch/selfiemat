@@ -7,6 +7,7 @@
 
 #include <QWidget>
 #include <QLabel>
+#include <QPushButton>
 #include <QTimer>
 
 class MainWindow : public QWidget
@@ -21,6 +22,7 @@ signals:
 public slots:
     void updatePreview();
     void togglePreview();
+    void findAndInitCamera();
 
     void startScene();
     void takeScenePicture();
@@ -32,9 +34,11 @@ protected:
 
     QTimer previewTimer;
     QTimer sceneTimer;
+    QTimer camInitTimer;
 
 private:
     std::vector<QImage> scene;
+    QPushButton *previewBtn, *captureBtn;
 
     void startPreview();
     void stopPreview();

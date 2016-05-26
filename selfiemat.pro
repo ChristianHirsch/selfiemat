@@ -20,12 +20,14 @@ TEMPLATE = app
 SOURCES += main.cpp \
     mainwindow.cpp \
     photo.cpp \
-    eye.cpp
+    eye.cpp \
+    scene.cpp
 
 HEADERS += \
     mainwindow.h \
     photo.h \
-    eye.h
+    eye.h \
+    scene.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libgphoto2
