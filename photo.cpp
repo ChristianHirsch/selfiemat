@@ -3,6 +3,7 @@
 #include <string>
 
 #include <QPrinter>
+#include <QPrintDialog>
 #include <QPainter>
 
 Photo::Photo()
@@ -29,25 +30,49 @@ void Photo::save(const std::string &_path)
 {
     using namespace std;
 
-    paintImage();
+    //paintImage();
     createDocument();
 
     QPrinter printer;
+    QPrintDialog *dialog = new QPrintDialog(&printer);
+    dialog->setWindowTitle("Print Image");
+    //dialog->addEnabledOption(QAbstractPrintDialog::PrintSelection);
+    if(dialog->exec() != QDialog::Accepted)
+        return;
 
+    printf("Printer name: %s\n", printer.printerName().toStdString().c_str());
+
+    /*
     printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer.setPaperSize(QPrinter::A4);
+    printer.setPageSizeMM(QSizeF(102.0,152.0));
     printer.setOrientation(QPrinter::Landscape);
-
-    printer.setOutputFileName(_path.c_str());
-    printer.setOutputFormat(QPrinter::PdfFormat);
-
+    printer.setOrientation(QPrinter::Landscape);
     printer.setFullPage(true);
+
+    //printer.setOutputFileName(_path.c_str());
+    //printer.setOutputFormat(QPrinter::PdfFormat);
+    */
+
     document.print(&printer);
 }
 
 void Photo::print()
 {
+    QPrinter printer;
 
+    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer.setFullPage(true);
+    printer.setPageSizeMM(QSizeF(102.0,152.0));
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setCopyCount(1);
+
+    /*
+    printer.setOutputFileName(_path.c_str());
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    */
+
+    printer.setFullPage(true);
+    document.print(&printer);
 }
 
 void Photo::createDocument()
@@ -57,9 +82,11 @@ void Photo::createDocument()
     document.clear();
     document.setIndentWidth(0);
     document.setDocumentMargin(0);
+    document.setPageSize(QSize(152.0, 102));
 
+    string html = "<img width=152 height=102 src=\"/home/worker/img.png\">";
+    /*
     string html =  "<table width=\"100%\"><tr>";
-
     int counter = 0;
     for(const QImage &image: images)
     {
@@ -76,6 +103,7 @@ void Photo::createDocument()
         counter++;
     }
     html += "</tr></table>";
+    */
 
     /*
     html += "<img style=\"position: absolute; top: 0px; left: 0px\""

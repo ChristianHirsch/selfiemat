@@ -31,6 +31,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     layout->addWidget(captureBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
+
+    // D E B U G
+    Photo photo;
+    photo.save("/home/worker/img.pdf");
 }
 
 MainWindow::~MainWindow()
