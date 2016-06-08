@@ -23,6 +23,8 @@ public:
 
     QImage getSceneImage() const;
 
+    static void setTemplateLocation(const QString &_templateLocation);
+
 private:
     struct ImageElement {
         float posX = 0.0f, posY = 0.0f, width = 1.0f, height = 1.0f;

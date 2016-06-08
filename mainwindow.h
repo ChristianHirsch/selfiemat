@@ -40,7 +40,8 @@ protected:
 private:
     Scene scene;
     QPushButton *previewBtn, *captureBtn;
-    QAction *selectPrinterAction, *loadSceneAction;
+    QAction *selectPrinterAction, *loadSceneAction,
+      *setWorkDirectoryPathAction, *setFileBaseNameAction;
 
     void initActions();
 

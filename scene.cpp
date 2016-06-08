@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include "common.h"
+
 #include <QPainter>
 
 QString Scene::templateLocation = "";
@@ -99,3 +101,7 @@ QImage Scene::getSceneImage() const
     return QImage(image);
 }
 
+void Scene::setTemplateLocation(const QString &_templateLocation)
+{
+    templateLocation = _templateLocation;
+}

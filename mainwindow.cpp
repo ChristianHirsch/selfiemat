@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include "common.h"
 #include "photo.h"
 
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include <QAction>
 #include <QContextMenuEvent>
 #include <QDateTime>
+#include <QDir>
 #include <QMenu>
 #include <QImage>
 #include <QVBoxLayout>
@@ -44,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
 
     scene.initialize();
     initActions();
+
+    QDir workDir(Common::getWorkDirectoryPath());
+    if(!workDir.mkpath(Common::getWorkDirectoryPath()))
+        printf("Error creating working directory \"%s\"", workDir.absolutePath().toStdString());
 }
 
 MainWindow::~MainWindow()
@@ -112,6 +118,12 @@ void MainWindow::initActions()
 {
     selectPrinterAction = new QAction(tr("Select &Printer"), this);
     connect(selectPrinterAction, &QAction::triggered, Photo::selectPrinter);
+
+    setWorkDirectoryPathAction = new QAction(tr("Select &Working Directory"), this);
+    connect(setWorkDirectoryPathAction, &QAction::triggered, Common::setWorkDirectoryPathWithDialog);
+
+    setFileBaseNameAction = new QAction(tr("Select &File base name"), this);
+    connect(setFileBaseNameAction, &QAction::triggered, Common::setFileBaseNameWithDialog);
 }
 
 void MainWindow::startPreview()
@@ -130,6 +142,8 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *_event)
 
     //menu.addAction(loadSceneAction);
     menu.addAction(selectPrinterAction);
+    menu.addAction(setWorkDirectoryPathAction);
+    menu.addAction(setFileBaseNameAction);
     menu.exec(_event->globalPos());
     //menu.exec(_event->globalPos());
 }

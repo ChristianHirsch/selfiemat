@@ -17,12 +17,8 @@ public:
     ~Photo();
 
     void setScene(const Scene &_scene);
-    void saveImages(const std::string &_fileLocations);
     void save(const std::string &_path);
     void print();
-
-    QString getFileBaseName() const;
-    void setFileBaseName(const QString &value);
 
     float getPageWidth() const;
     void setPageWidth(float value);
@@ -38,7 +34,6 @@ private:
     Scene scene;
     QTextDocument document;
     QImage image;
-    QString fileBaseName;
     QDateTime sceneCreated;
 
     static bool isPrinterInitialized;

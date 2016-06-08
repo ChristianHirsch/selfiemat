@@ -21,13 +21,15 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     photo.cpp \
     eye.cpp \
-    scene.cpp
+    scene.cpp \
+    common.cpp
 
 HEADERS += \
     mainwindow.h \
     photo.h \
     eye.h \
-    scene.h
+    scene.h \
+    common.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libgphoto2

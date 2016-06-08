@@ -1,5 +1,7 @@
 #include "photo.h"
 
+#include "common.h"
+
 #include <string>
 
 #include <QDir>
@@ -7,13 +9,13 @@
 #include <QPrintDialog>
 #include <QPainter>
 #include <QDateTime>
+#include <QStandardPaths>
 
 bool Photo::isPrinterInitialized = false;
 QPrinter *Photo::printer = NULL;
 
 Photo::Photo():
     scene(1480,1000),
-    fileBaseName("/tmp/selfie"),
     sceneCreated(QDateTime::currentDateTime())
 {
     pageHeight = 100.0f;
@@ -34,22 +36,6 @@ void Photo::setScene(const Scene &_scene)
     scene = _scene;
 }
 
-void Photo::saveImages(const std::string &_fileLocations)
-{
-    /*
-    QDir dir(QString::fromStdString(_fileLocations));
-    if(dir.exists(QString::fromStdString(_fileLocations)))
-        dir.mkdir(QString::fromStdString(_fileLocations));
-
-    int i=0;
-    for(const QImage &img : images )
-    {
-        img.save(getFileName() + "/" + i + ".png");
-        i++;
-    }
-    */
-}
-
 void Photo::print()
 {
     QString originalFileName = printer->outputFileName();
@@ -59,7 +45,7 @@ void Photo::print()
         QString fileName = originalFileName;
 
         if(fileName.endsWith(".pdf"), Qt::CaseInsensitive)
-            fileName.chop(QString(".pdf").size());
+            fileName = fileName.split(".", QString::SkipEmptyParts).at(0);
 
         fileName += QDateTime::currentDateTime().toString("_yyyy-MM-dd_hh-mm-ss");
         fileName += ".pdf";
@@ -70,16 +56,6 @@ void Photo::print()
     document.print(printer);
 
     printer->setOutputFileName(originalFileName);
-}
-
-QString Photo::getFileBaseName() const
-{
-    return fileBaseName;
-}
-
-void Photo::setFileBaseName(const QString &value)
-{
-    fileBaseName = value;
 }
 
 void Photo::selectPrinter()
@@ -101,7 +77,7 @@ void Photo::selectPrinter()
 
 QString Photo::getAbsoluteStampedFileName(QString _ending) const
 {
-    return fileBaseName
+    return Common::getAbsoluteBaseFilePath()
             + sceneCreated.toString("_yyyy-MM-dd_hh-mm-ss")
             + _ending;
 }
