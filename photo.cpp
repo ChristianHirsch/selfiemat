@@ -8,18 +8,19 @@
 #include <QPainter>
 #include <QDateTime>
 
-Photo::Photo()
+bool Photo::isPrinterInitialized = false;
+QPrinter *Photo::printer = NULL;
+
+Photo::Photo():
+    scene(1480,1000),
+    fileBaseName("/tmp/selfie"),
+    sceneCreated(QDateTime::currentDateTime())
 {
     pageHeight = 100.0f;
     pageWidth = 148.0f;
 
-    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer.setFullPage(true);
-    printer.setPageSizeMM(QSizeF(pageHeight, pageWidth));
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setCopyCount(1);
-
-    printer.setFullPage(true);
+    if(!isPrinterInitialized)
+        initializePrinter();
 }
 
 Photo::~Photo()
@@ -27,18 +28,15 @@ Photo::~Photo()
 
 }
 
-void Photo::addImage(const QImage &_image)
+void Photo::setScene(const Scene &_scene)
 {
-    images.push_back(_image);
-}
-
-void Photo::addImage(const std::vector<QImage> &_images)
-{
-    images.insert(images.end(), _images.begin(), _images.end());
+    sceneCreated = QDateTime::currentDateTime();
+    scene = _scene;
 }
 
 void Photo::saveImages(const std::string &_fileLocations)
 {
+    /*
     QDir dir(QString::fromStdString(_fileLocations));
     if(dir.exists(QString::fromStdString(_fileLocations)))
         dir.mkdir(QString::fromStdString(_fileLocations));
@@ -49,52 +47,79 @@ void Photo::saveImages(const std::string &_fileLocations)
         img.save(getFileName() + "/" + i + ".png");
         i++;
     }
-}
-
-void Photo::save(const std::string &_path)
-{
-    using namespace std;
-
-    paintImage();
-    createDocument();
-
-    QPrinter printer;
-
-    printer.setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer.setPageSizeMM(QSizeF(pageHeight, pageWidth));
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setFullPage(true);
-
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setOutputFileName(_path.c_str());
-
-    document.print(&printer);
+    */
 }
 
 void Photo::print()
 {
-    document.print(&printer);
+    QString originalFileName = printer->outputFileName();
+
+    if(printer->outputFormat() == QPrinter::PdfFormat)
+    {
+        QString fileName = originalFileName;
+
+        if(fileName.endsWith(".pdf"), Qt::CaseInsensitive)
+            fileName.chop(QString(".pdf").size());
+
+        fileName += QDateTime::currentDateTime().toString("_yyyy-MM-dd_hh-mm-ss");
+        fileName += ".pdf";
+
+        printer->setOutputFileName(fileName);
+    }
+    createDocument();
+    document.print(printer);
+
+    printer->setOutputFileName(originalFileName);
 }
 
-QString Photo::getFileName() const
+QString Photo::getFileBaseName() const
 {
-    return fileName;
+    return fileBaseName;
 }
 
-void Photo::setFileName(const QString &value)
+void Photo::setFileBaseName(const QString &value)
 {
-    fileName = value;
+    fileBaseName = value;
 }
 
 void Photo::selectPrinter()
 {
-    QPrintDialog *dialog = new QPrintDialog(&printer);
+    if(!printer)
+        printer = new QPrinter();
+
+    printf("Selecting printer...\n");
+    QPrintDialog *dialog = new QPrintDialog(printer);
     dialog->setWindowTitle("Print Image");
     dialog->addEnabledOption(QAbstractPrintDialog::PrintSelection);
     if(dialog->exec() != QDialog::Accepted)
         return;
 
-    printf("Selected printer: %s\n", printer.printerName().toStdString().c_str());
+    printf("Selected printer: %s\n", printer->printerName().toStdString().c_str());
+
+    isPrinterInitialized = true;
+}
+
+QString Photo::getAbsoluteStampedFileName(QString _ending) const
+{
+    return fileBaseName
+            + sceneCreated.toString("_yyyy-MM-dd_hh-mm-ss")
+            + _ending;
+}
+
+void Photo::initializePrinter()
+{
+    if(!printer)
+        printer = new QPrinter();
+
+    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer->setFullPage(true);
+    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
+    printer->setOrientation(QPrinter::Landscape);
+    printer->setCopyCount(1);
+
+    printer->setFullPage(true);
+
+    isPrinterInitialized = false;
 }
 
 float Photo::getPageWidth() const
@@ -121,63 +146,24 @@ void Photo::createDocument()
 {
     using namespace std;
 
+    paintImage();
+
     document.clear();
     document.setIndentWidth(0);
     document.setDocumentMargin(0);
-    document.setPageSize(QSize(pageWidth, pageHeight));
+    document.setPageSize(QSize(printer->widthMM(), printer->heightMM()));
 
-    string html = "<img width=" + to_string(pageWidth)
-            + " height=" + to_string(pageHeight)
-            + " src=\"" + getFileName().toStdString() + ".png\">";
-    /*
-    string html =  "<table width=\"100%\"><tr>";
-    int counter = 0;
-    for(const QImage &image: images)
-    {
-        if(counter%2 == 0)
-            html += "</tr><tr>";
-
-        string fileName = "/tmp/photo_" + to_string(counter) + ".png";
-        image.save(fileName.c_str());
-
-        html += "<td>"
-                "<img width=\"450\" src=\"" + fileName + "\">"
-                "</td>";
-
-        counter++;
-    }
-    html += "</tr></table>";
-    */
-
-    /*
-    html += "<img style=\"position: absolute; top: 0px; left: 0px\""
-            "src=\"/home/worker/frame.png\">";
-            */
+    string html = "<img width=" + to_string(printer->widthMM())
+            + " height=" + to_string(printer->heightMM())
+            + " src=\"" + getAbsoluteStampedFileName(".png").toStdString()
+            + "\">";
 
     document.setHtml(html.c_str());
 }
 
 void Photo::paintImage()
 {
-    float scale = (float)2048 / images[0].width();
-
-    QImage img(2048, round(scale * (float)images[1].height()),
-            QImage::Format_ARGB32);
-    QImage background("/home/foreman/Downloads/hochzeit_rahmen.png");
-
-    QPainter painter;
-    painter.begin(&img);
-    painter.drawImage(QRectF(0.0, 0.0, img.width()/2, img.height()/2),
-                      images[0]);
-    painter.drawImage(QRectF(img.width()/2, 0.0, img.width()/2, img.height()/2),
-                      images[1]);
-    painter.drawImage(QRectF(0.0, img.height()/2, img.width()/2, img.height()/2),
-                      images[2]);
-    painter.drawImage(QRectF(img.width()/2, img.height()/2, img.width()/2, img.height()/2),
-                      images[3]);
-    painter.drawImage(img.rect(), background);
-    painter.end();
-
-    img.save(getFileName() + ".png");
+    scene.paint();
+    scene.save(getAbsoluteStampedFileName(".png"));
 }
 

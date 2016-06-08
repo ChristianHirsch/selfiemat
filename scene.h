@@ -13,12 +13,15 @@ public:
     Scene(const int &_width, const int &_height);
     ~Scene();
 
-    void initialize(const std::string &_templateLocation = templateLocation);
+    void initialize(const QString &_templateLocation = templateLocation);
     void clear();
     void paint();
-    void save(const std::string &_path);
+    void save(const QString &_path);
 
     bool addImage(QImage &_image);
+    int imagesToAdd();
+
+    QImage getSceneImage() const;
 
 private:
     struct ImageElement {
@@ -31,7 +34,7 @@ private:
     std::vector<ImageElement> imageElements;
     std::vector<ImageElement> templateImageElements;
 
-    static std::string templateLocation;
+    static QString templateLocation;
 };
 
 #endif // SCENE_H

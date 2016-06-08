@@ -1,8 +1,11 @@
 #ifndef PHOTO_H
 #define PHOTO_H
 
+#include "scene.h"
+
 #include <vector>
 
+#include <QDateTime>
 #include <QImage>
 #include <QPrinter>
 #include <QTextDocument>
@@ -13,16 +16,13 @@ public:
     Photo();
     ~Photo();
 
-    void addImage(const QImage &_image);
-    void addImage(const std::vector<QImage> &_images);
+    void setScene(const Scene &_scene);
     void saveImages(const std::string &_fileLocations);
     void save(const std::string &_path);
     void print();
 
-    QString getFileName() const;
-    void setFileName(const QString &value);
-
-    void selectPrinter();
+    QString getFileBaseName() const;
+    void setFileBaseName(const QString &value);
 
     float getPageWidth() const;
     void setPageWidth(float value);
@@ -30,16 +30,24 @@ public:
     float getPageHeight() const;
     void setPageHeight(float value);
 
+public slots:
+    static void selectPrinter();
+
 private:
 
-    std::vector<QImage> images;
+    Scene scene;
     QTextDocument document;
     QImage image;
-    QString fileName;
-    QPrinter printer;
+    QString fileBaseName;
+    QDateTime sceneCreated;
+
+    static bool isPrinterInitialized;
+    static QPrinter *printer;
 
     float pageWidth, pageHeight;
 
+    QString getAbsoluteStampedFileName(QString _ending = "") const;
+    void initializePrinter();
     void createDocument();
     void paintImage();
 };

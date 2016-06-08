@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "eye.h"
+#include "scene.h"
 
 #include <vector>
 
@@ -37,11 +38,16 @@ protected:
     QTimer camInitTimer;
 
 private:
-    std::vector<QImage> scene;
+    Scene scene;
     QPushButton *previewBtn, *captureBtn;
+    QAction *selectPrinterAction, *loadSceneAction;
+
+    void initActions();
 
     void startPreview();
     void stopPreview();
+
+    void contextMenuEvent(QContextMenuEvent *_event);
 };
 
 #endif // MAINWINDOW_H

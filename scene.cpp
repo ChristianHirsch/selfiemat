@@ -2,6 +2,8 @@
 
 #include <QPainter>
 
+QString Scene::templateLocation = "";
+
 Scene::Scene(const int &_width, const int &_height):
     image(_width, _height, QImage::Format_ARGB32),
     background(_width, _height, QImage::Format_ARGB32)
@@ -14,7 +16,7 @@ Scene::~Scene()
 
 }
 
-void Scene::initialize(const std::string &_templateLocation)
+void Scene::initialize(const QString &_templateLocation)
 {
     if(_templateLocation.size() == 0)
     {
@@ -23,6 +25,10 @@ void Scene::initialize(const std::string &_templateLocation)
 
         QPainter painter;
         painter.begin(&background);
+        painter.fillRect(background.rect(), Qt::transparent);
+        painter.end();
+
+        painter.begin(&image);
         painter.fillRect(background.rect(), Qt::white);
         painter.end();
 
@@ -63,9 +69,9 @@ void Scene::paint()
     painter.end();
 }
 
-void Scene::save(const std::string &_path)
+void Scene::save(const QString &_path)
 {
-    image.save(QString::fromStdString(_path));
+    image.save(_path);
 }
 
 bool Scene::addImage(QImage &_image)
@@ -76,10 +82,20 @@ bool Scene::addImage(QImage &_image)
     ImageElement element = templateImageElements.back();
     templateImageElements.pop_back();
 
-    element.image = _image;
+    element.image = QImage(_image);
 
     imageElements.push_back(element);
 
     return true;
+}
+
+int Scene::imagesToAdd()
+{
+    return templateImageElements.size();
+}
+
+QImage Scene::getSceneImage() const
+{
+    return QImage(image);
 }
 
