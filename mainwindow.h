@@ -29,6 +29,8 @@ public slots:
     void takeScenePicture();
     void endScene();
 
+    void loadScene();
+
 protected:
     Eye eye;
     QLabel label;

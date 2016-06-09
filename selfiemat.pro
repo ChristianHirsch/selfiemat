@@ -8,6 +8,7 @@ QT       += core
 QT       += gui
 QT       += widgets
 QT       += printsupport
+QT       += xml
 
 TARGET = selfiemat
 CONFIG += console

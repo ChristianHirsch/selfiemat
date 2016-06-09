@@ -3,6 +3,9 @@
 #include "common.h"
 
 #include <QPainter>
+#include <QFile>
+#include <QFileDialog>
+#include <QXmlStreamReader>
 
 QString Scene::templateLocation = "";
 
@@ -23,6 +26,8 @@ void Scene::initialize(const QString &_templateLocation)
     if(_templateLocation.size() == 0)
     {
         ImageElement element;
+        element.width = image.width();
+        element.height = image.height();
         templateImageElements.push_back(element);
 
         QPainter painter;
@@ -59,12 +64,14 @@ void Scene::paint()
 
     for (const ImageElement &element : imageElements)
     {
-        painter.drawImage( QRectF(
-                    element.posX * image.size().width(),
-                    element.posY * image.size().height(),
-                    element.width * image.size().width(),
-                    element.height * image.size().height()),
-                    element.image);
+        QRectF target(element.posX, element.posY,
+                      element.width, element.height);
+        QRectF source(getSourceFromImage(element.image, target));
+
+        painter.drawImage(target, element.image, source);
+
+        printf("Target: %f / %f / %f / %f\n", target.x(), target.y(), target.width(), target.height());
+        printf("Source: %f / %f / %f / %f\n", source.x(), source.y(), source.width(), source.height());
     }
 
     painter.drawImage(image.rect(), background);
@@ -74,6 +81,62 @@ void Scene::paint()
 void Scene::save(const QString &_path)
 {
     image.save(_path);
+}
+
+void Scene::loadScene()
+{
+    QFile scene(QFileDialog::getOpenFileName());
+    QFileInfo sceneFileInfo(scene);
+
+    if(!scene.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+
+    QXmlStreamReader xml(&scene);
+
+    imageElements.clear();
+    templateImageElements.clear();
+
+    while(!xml.atEnd() && !xml.hasError())
+    {
+        QXmlStreamReader::TokenType token = xml.readNext();
+
+        if(token == QXmlStreamReader::StartDocument)
+            continue;
+
+        if(token == QXmlStreamReader::StartElement)
+        {
+            if(xml.name() == "frame")
+            {
+                int width  = xml.attributes().value("width").toString().toInt();
+                int height = xml.attributes().value("height").toString().toInt();
+                image = QImage(width, height, QImage::Format_ARGB32);
+                QFile backgroundFile(xml.attributes().value("background").toString());
+                if(QDir::isRelativePath(backgroundFile.fileName()))
+                {
+                    QDir dir(sceneFileInfo.absoluteDir());
+                    backgroundFile.setFileName(dir.absoluteFilePath(backgroundFile.fileName()));
+                }
+                background.load(backgroundFile.fileName());
+
+                while(!(xml.name() == "frame" && token == QXmlStreamReader::EndElement))
+                {
+                    if(xml.name() == "image" && token == QXmlStreamReader::StartElement)
+                    {
+                        ImageElement ie;
+                        ie.posX   = xml.attributes().value("x").toString().toFloat();
+                        ie.posY   = xml.attributes().value("y").toString().toFloat();
+                        ie.width  = xml.attributes().value("width").toString().toFloat();
+                        ie.height = xml.attributes().value("height").toString().toFloat();
+
+                        printf("Add image element: %f / %f / %f / %f\n", ie.posX, ie.posY, ie.width, ie.height);
+                        templateImageElements.push_back(ie);
+                    }
+
+                    token = xml.readNext();
+                }
+            }
+        }
+    }
 }
 
 bool Scene::addImage(QImage &_image)
@@ -101,7 +164,50 @@ QImage Scene::getSceneImage() const
     return QImage(image);
 }
 
+QImage Scene::getPreviewImage() const
+{
+    QImage preview(image);
+
+    QPainter painter;
+    painter.begin(&preview);
+
+    for (const ImageElement &element : imageElements)
+    {
+        painter.fillRect(QRectF(
+                    element.posX,
+                    element.posY,
+                    element.width,
+                    element.height),
+                    Qt::black);
+    }
+
+    painter.drawImage(image.rect(), background);
+    painter.end();
+
+    return preview;
+}
+
 void Scene::setTemplateLocation(const QString &_templateLocation)
 {
     templateLocation = _templateLocation;
+}
+
+QRectF Scene::getSourceFromImage(const QImage &_image, const QRectF &_target)
+{
+    float ratio = _target.width() / _target.height();
+
+    if(_target.width() < _target.height())
+    {
+        float width = (float)_image.height() * ratio;
+
+        return QRectF((_image.width() - width) / 2.0,
+                      0.0f,
+                      width, _image.height());
+    }
+
+    float height = (float)_image.width() / ratio;
+
+    return QRectF(0.0f,
+                  (_image.height() - height) / 2.0f,
+                  _image.width(), height);
 }

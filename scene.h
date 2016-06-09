@@ -18,16 +18,23 @@ public:
     void paint();
     void save(const QString &_path);
 
+    void loadScene();
+
     bool addImage(QImage &_image);
     int imagesToAdd();
 
     QImage getSceneImage() const;
 
+    QImage getPreviewImage() const;
+
     static void setTemplateLocation(const QString &_templateLocation);
 
 private:
     struct ImageElement {
-        float posX = 0.0f, posY = 0.0f, width = 1.0f, height = 1.0f;
+        float posX = 0.0f;
+        float posY = 0.0f;
+        float width = 1.0f;
+        float height = 1.0f;
         QImage image;
     };
 
@@ -37,6 +44,8 @@ private:
     std::vector<ImageElement> templateImageElements;
 
     static QString templateLocation;
+
+    static QRectF getSourceFromImage(const QImage &_image, const QRectF &_target);
 };
 
 #endif // SCENE_H

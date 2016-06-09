@@ -114,6 +114,12 @@ void MainWindow::endScene()
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
 }
 
+void MainWindow::loadScene()
+{
+    scene.loadScene();
+    label.setPixmap(QPixmap::fromImage(scene.getPreviewImage()).scaled(label.width(), label.height(), Qt::KeepAspectRatio));
+}
+
 void MainWindow::initActions()
 {
     selectPrinterAction = new QAction(tr("Select &Printer"), this);
@@ -124,6 +130,9 @@ void MainWindow::initActions()
 
     setFileBaseNameAction = new QAction(tr("Select &File base name"), this);
     connect(setFileBaseNameAction, &QAction::triggered, Common::setFileBaseNameWithDialog);
+
+    loadSceneAction = new QAction(tr("Load &Scene"), this);
+    connect(loadSceneAction, SIGNAL(triggered(bool)), this, SLOT(loadScene()));
 }
 
 void MainWindow::startPreview()
@@ -140,10 +149,9 @@ void MainWindow::contextMenuEvent(QContextMenuEvent *_event)
 {
     QMenu menu(this);
 
-    //menu.addAction(loadSceneAction);
+    menu.addAction(loadSceneAction);
     menu.addAction(selectPrinterAction);
     menu.addAction(setWorkDirectoryPathAction);
     menu.addAction(setFileBaseNameAction);
     menu.exec(_event->globalPos());
-    //menu.exec(_event->globalPos());
 }
