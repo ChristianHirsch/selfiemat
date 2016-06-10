@@ -11,6 +11,7 @@ class Scene
 {
 public:
     Scene(const int &_width, const int &_height);
+    Scene(const QString &_filePath);
     ~Scene();
 
     void initialize(const QString &_templateLocation = templateLocation);
@@ -18,7 +19,7 @@ public:
     void paint();
     void save(const QString &_path);
 
-    void loadScene();
+    void loadScene(const QString &_filePath);
 
     bool addImage(QImage &_image);
     int imagesToAdd();

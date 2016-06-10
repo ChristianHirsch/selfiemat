@@ -16,6 +16,11 @@ Scene::Scene(const int &_width, const int &_height):
     clear();
 }
 
+Scene::Scene(const QString &_filePath)
+{
+    loadScene(_filePath);
+}
+
 Scene::~Scene()
 {
 
@@ -83,9 +88,9 @@ void Scene::save(const QString &_path)
     image.save(_path);
 }
 
-void Scene::loadScene()
+void Scene::loadScene(const QString &_filePath)
 {
-    QFile scene(QFileDialog::getOpenFileName());
+    QFile scene(_filePath);
     QFileInfo sceneFileInfo(scene);
 
     if(!scene.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -127,9 +132,7 @@ void Scene::loadScene()
                         ie.posY   = xml.attributes().value("y").toString().toFloat();
                         ie.width  = xml.attributes().value("width").toString().toFloat();
                         ie.height = xml.attributes().value("height").toString().toFloat();
-
-                        printf("Add image element: %f / %f / %f / %f\n", ie.posX, ie.posY, ie.width, ie.height);
-                        templateImageElements.push_back(ie);
+                        templateImageElements.insert(templateImageElements.begin(), ie);
                     }
 
                     token = xml.readNext();

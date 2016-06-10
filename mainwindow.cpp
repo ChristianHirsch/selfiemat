@@ -14,26 +14,19 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
-    scene(1480,1000)
+MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
     QVBoxLayout *layout = new QVBoxLayout;
     setLayout(layout);
 
-    layout->addWidget(&label);
-    label.setMinimumSize(800, 600);
+    layout->addWidget(&screen);
+    screen.setMinimumSize(800, 600);
 
     previewBtn = new QPushButton;
     previewBtn->setText("Preview");
     connect(previewBtn, SIGNAL(clicked()), this, SLOT(togglePreview()));
     previewBtn->setEnabled(false);
     layout->addWidget(previewBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
-
-    captureBtn = new QPushButton;
-    captureBtn->setText("Cheese!");
-    connect(captureBtn, SIGNAL(clicked()), this, SLOT(startScene()));
-    captureBtn->setEnabled(false);
-    layout->addWidget(captureBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
     connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
@@ -44,22 +37,23 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
     setAutoFillBackground(true);
     setPalette(pal);
 
-    scene.initialize();
     initActions();
 
     QDir workDir(Common::getWorkDirectoryPath());
     if(!workDir.mkpath(Common::getWorkDirectoryPath()))
-        printf("Error creating working directory \"%s\"", workDir.absolutePath().toStdString());
+        printf("Error creating working directory \"%s\"", workDir.absolutePath().toStdString().c_str());
 }
 
 MainWindow::~MainWindow()
 {
+    while(Common::getSceneCount() > 0)
+        Common::scenePopBack();
 }
 
 void MainWindow::updatePreview()
 {
     QImage image = eye.takePreview();
-    label.setPixmap(QPixmap::fromImage(image).scaled(label.width(), label.height(), Qt::KeepAspectRatio));
+    screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
 }
 
 void MainWindow::togglePreview()
@@ -75,8 +69,11 @@ void MainWindow::findAndInitCamera()
     if(!eye.initCamera())
         return;
 
+    connect(&screen, SIGNAL(clickedCenter()), this, SLOT(startScene()));
+    connect(&screen, SIGNAL(clickedRight()), this, SLOT(selectAndShowNextScene()));
+    connect(&screen, SIGNAL(clickedLeft()), this, SLOT(selectAndShowPrevScene()));
+
     previewBtn->setEnabled(true);
-    captureBtn->setEnabled(true);
 
     camInitTimer.stop();
 }
@@ -84,19 +81,19 @@ void MainWindow::findAndInitCamera()
 void MainWindow::startScene()
 {
     disconnect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
-    scene.clear();
+    Common::getScene()->clear();
     sceneTimer.start(1500);
     connect(&sceneTimer, SIGNAL(timeout()), this, SLOT(takeScenePicture()));
 }
 
 void MainWindow::takeScenePicture()
 {
-    if(scene.imagesToAdd() <= 0)
+    if(Common::getScene()->imagesToAdd() <= 0)
         return endScene();
 
     QImage image = eye.takePicture();
-    label.setPixmap(QPixmap::fromImage(image).scaled(label.width(), label.height(), Qt::KeepAspectRatio));
-    scene.addImage(image);
+    screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
+    Common::getScene()->addImage(image);
 }
 
 void MainWindow::endScene()
@@ -104,11 +101,11 @@ void MainWindow::endScene()
     sceneTimer.stop();
     disconnect(&sceneTimer, SIGNAL(timeout()), this, SLOT(takeScenePicture()));
 
-    scene.paint();
-    label.setPixmap(QPixmap::fromImage(scene.getSceneImage()).scaled(label.width(), label.height(), Qt::KeepAspectRatio));
+    Common::getScene()->paint();
+    showImage(Common::getScene()->getSceneImage());
 
     Photo photo;
-    photo.setScene(scene);
+    photo.setScene(Common::getScene());
     photo.print();
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
@@ -116,8 +113,27 @@ void MainWindow::endScene()
 
 void MainWindow::loadScene()
 {
-    scene.loadScene();
-    label.setPixmap(QPixmap::fromImage(scene.getPreviewImage()).scaled(label.width(), label.height(), Qt::KeepAspectRatio));
+    Scene *newScene = Common::loadSceneFromFile();
+    showImage(newScene->getPreviewImage());
+}
+
+void MainWindow::selectAndShowNextScene()
+{
+    Scene *scene = Common::getNextScene();
+    showImage(scene->getPreviewImage());
+}
+
+void MainWindow::selectAndShowPrevScene()
+{
+    Scene *scene = Common::getPrevScene();
+    showImage(scene->getPreviewImage());
+}
+
+void MainWindow::showImage(const QImage &_image)
+{
+    QPixmap pixmap = QPixmap::fromImage(_image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio);
+    screen.setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+    screen.setPixmap(pixmap);
 }
 
 void MainWindow::initActions()

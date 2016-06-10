@@ -16,7 +16,7 @@ public:
     Photo();
     ~Photo();
 
-    void setScene(const Scene &_scene);
+    void setScene(Scene *_scene);
     void save(const std::string &_path);
     void print();
 
@@ -31,7 +31,7 @@ public slots:
 
 private:
 
-    Scene scene;
+    Scene *scene;
     QTextDocument document;
     QImage image;
     QDateTime sceneCreated;

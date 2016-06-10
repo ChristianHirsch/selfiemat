@@ -3,6 +3,8 @@
 
 #include <QString>
 
+#include "scene.h"
+
 class Common
 {
 public:
@@ -18,9 +20,20 @@ public:
     static void setFileBaseName(const QString &value);
     static void setFileBaseNameWithDialog();
 
+    static Scene *getScene(int _id=currentScene);
+    static Scene *getNextScene();
+    static Scene *getPrevScene();
+    static int getSceneCount();
+    static Scene *loadSceneFromFile(const QString &_filePath = "");
+    static void scenePopBack();
+
 private:
     static QString workDirectoryPath;
     static QString fileBaseName;
+
+    static int currentScene;
+    static std::vector<Scene *> availabelScenes;
+    static Scene baseScene;
 };
 
 #endif // COMMON_H

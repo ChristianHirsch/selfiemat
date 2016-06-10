@@ -15,7 +15,6 @@ bool Photo::isPrinterInitialized = false;
 QPrinter *Photo::printer = NULL;
 
 Photo::Photo():
-    scene(1480,1000),
     sceneCreated(QDateTime::currentDateTime())
 {
     pageHeight = 100.0f;
@@ -30,7 +29,7 @@ Photo::~Photo()
 
 }
 
-void Photo::setScene(const Scene &_scene)
+void Photo::setScene(Scene *_scene)
 {
     sceneCreated = QDateTime::currentDateTime();
     scene = _scene;
@@ -139,7 +138,6 @@ void Photo::createDocument()
 
 void Photo::paintImage()
 {
-    scene.paint();
-    scene.save(getAbsoluteStampedFileName(".png"));
+    scene->paint();
+    scene->save(getAbsoluteStampedFileName(".png"));
 }
-

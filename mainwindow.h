@@ -3,6 +3,7 @@
 
 #include "eye.h"
 #include "scene.h"
+#include "screen.h"
 
 #include <vector>
 
@@ -30,18 +31,21 @@ public slots:
     void endScene();
 
     void loadScene();
+    void selectAndShowNextScene();
+    void selectAndShowPrevScene();
+
+    void showImage(const QImage &_image);
 
 protected:
     Eye eye;
-    QLabel label;
+    Screen screen;
 
     QTimer previewTimer;
     QTimer sceneTimer;
     QTimer camInitTimer;
 
 private:
-    Scene scene;
-    QPushButton *previewBtn, *captureBtn;
+    QPushButton *previewBtn;
     QAction *selectPrinterAction, *loadSceneAction,
       *setWorkDirectoryPathAction, *setFileBaseNameAction;
 
