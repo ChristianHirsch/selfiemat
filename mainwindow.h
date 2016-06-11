@@ -36,6 +36,8 @@ public slots:
 
     void showImage(const QImage &_image);
 
+    void openContextMenu(const QPoint &_pos);
+
 protected:
     Eye eye;
     Screen screen;

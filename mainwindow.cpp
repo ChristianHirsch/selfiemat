@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     setLayout(layout);
 
     layout->addWidget(&screen);
-    screen.setMinimumSize(800, 600);
+    screen.setMinimumSize(420, 280);
 
     previewBtn = new QPushButton;
     previewBtn->setText("Preview");
@@ -31,6 +31,8 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
     connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
     camInitTimer.start(1000);
+
+    connect(&screen, SIGNAL(contextClicked(const QPoint &)), this, SLOT(openContextMenu(const QPoint &)));
 
     QPalette pal(palette());
     pal.setColor(QPalette::Background, Qt::black);
@@ -136,6 +138,17 @@ void MainWindow::showImage(const QImage &_image)
     screen.setPixmap(pixmap);
 }
 
+void MainWindow::openContextMenu(const QPoint &_pos)
+{
+    QMenu menu(this);
+
+    menu.addAction(loadSceneAction);
+    menu.addAction(selectPrinterAction);
+    menu.addAction(setWorkDirectoryPathAction);
+    menu.addAction(setFileBaseNameAction);
+    menu.exec(_pos);
+}
+
 void MainWindow::initActions()
 {
     selectPrinterAction = new QAction(tr("Select &Printer"), this);
@@ -163,11 +176,5 @@ void MainWindow::stopPreview()
 
 void MainWindow::contextMenuEvent(QContextMenuEvent *_event)
 {
-    QMenu menu(this);
-
-    menu.addAction(loadSceneAction);
-    menu.addAction(selectPrinterAction);
-    menu.addAction(setWorkDirectoryPathAction);
-    menu.addAction(setFileBaseNameAction);
-    menu.exec(_event->globalPos());
+    openContextMenu(_event->globalPos());
 }
