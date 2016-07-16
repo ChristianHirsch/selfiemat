@@ -18,6 +18,8 @@
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
     idle("icons/press.png"),
+    noCamera("icons/no_camera.png"),
+    noPrinter("icons/no_printer.png"),
     smile("icons/smile.png")
 {
     setMinimumSize(480, 320);
@@ -36,7 +38,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
     connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
-    camInitTimer.start(1000);
 
     connect(&screen, SIGNAL(contextClicked(const QPoint &)), this, SLOT(openContextMenu(const QPoint &)));
 
@@ -52,6 +53,11 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
         printf("Error creating working directory \"%s\"", workDir.absolutePath().toStdString().c_str());
 
     stateTimer.setSingleShot(true);
+    connect(&stateTimer, SIGNAL(timeout()), this, SLOT(stateChange()));
+
+    // initialize camera
+    state = ERROR_CAMERA;
+    stateChange();
 }
 
 MainWindow::~MainWindow()
@@ -80,9 +86,6 @@ void MainWindow::findAndInitCamera()
         return;
 
     camInitTimer.stop();
-    stateTimer.stop();
-
-    connect(&stateTimer, SIGNAL(timeout()), this, SLOT(stateChange()));
 
     state = IDLE;
     stateChange();
@@ -91,6 +94,12 @@ void MainWindow::findAndInitCamera()
 void MainWindow::takeScenePicture()
 {
     QImage image = eye.takePicture();
+    if(image.isNull() || !eye.isCameraInitialized())
+    {
+        state = ERROR_CAMERA;
+        return stateChange();
+    }
+
     screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
     Common::getScene()->addImage(image);
 
@@ -163,6 +172,10 @@ void MainWindow::stopPreview()
 
 void MainWindow::stateChange()
 {
+
+    static State prevState;
+    static Photo photo;
+
     switch(state)
     {
         case IDLE:
@@ -201,7 +214,7 @@ void MainWindow::stateChange()
             break;
 
         case SMILE:
-            printf("take picture state\n");
+            printf("smile state\n");
             stopPreview();
 
             showImage(smile);
@@ -217,18 +230,54 @@ void MainWindow::stateChange()
             stateTimer.start(1000);
             break;
 
+        case ERROR_CAMERA:
+            printf("error camera state\n");
+            showImage(noCamera);
+
+            camInitTimer.start(1000);
+            break;
+
+        case ERROR_PRINTER:
+            printf("error printer state\n");
+            showImage(noPrinter);
+
+            connect(&screen, SIGNAL(clickedCenter()), this, SLOT(stateChange()));
+            state = prevState;
+            break;
+
         case PRINT:
             printf("print state\n");
+
+            disconnect(&screen, SIGNAL(clickedCenter()), this, SLOT(stateChange()));
 
             Common::getScene()->paint();
             showImage(Common::getScene()->getSceneImage());
 
-            Photo photo;
             photo.setScene(Common::getScene());
+            if(photo.getPrinterState() == QPrinter::Error)
+            {
+                prevState = PRINT;
+                state = ERROR_PRINTER;
+                stateChange();
+            }
             photo.print();
 
-            state = IDLE;
+            state = PRINTING;
             stateTimer.start(5000);
+            break;
+
+        case PRINTING:
+            printf("printing state\n");
+            QPrinter::PrinterState printerState = photo.getPrinterState();
+            if(printerState == QPrinter::Idle)
+                state = IDLE;
+            else if(printerState == QPrinter::Error)
+            {
+                prevState = PRINTING;
+                state = ERROR_PRINTER;
+            }
+
+            stateTimer.start(500);
             break;
     }
 }

@@ -50,7 +50,7 @@ private:
     QAction *selectPrinterAction, *loadSceneAction,
       *setWorkDirectoryPathAction, *setFileBaseNameAction;
 
-    QImage idle, smile;
+    QImage idle, smile, noPrinter, noCamera;
 
     void initActions();
 
@@ -59,7 +59,7 @@ private:
 
     void contextMenuEvent(QContextMenuEvent *_event);
 
-    enum
+    enum State
     {
         IDLE = 0,
         SELECT_SCENE,
@@ -68,7 +68,11 @@ private:
         SMILE,
         TAKE_PIC,
         PAUSE_PIC,
-        PRINT
+        PRINT,
+        PRINTING,
+
+        ERROR_CAMERA,
+        ERROR_PRINTER,
     } state;
 
 private slots:

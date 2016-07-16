@@ -17,6 +17,8 @@ public:
     QImage takePicture();
     QImage takePreview();
 
+    bool isCameraInitialized();
+
 protected:
 
     bool cameraInitialized;

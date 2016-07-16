@@ -26,6 +26,8 @@ public:
     float getPageHeight() const;
     void setPageHeight(float value);
 
+    QPrinter::PrinterState getPrinterState();
+
 public slots:
     static void selectPrinter();
 

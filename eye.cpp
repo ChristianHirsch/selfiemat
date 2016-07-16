@@ -27,6 +27,9 @@ Eye::~Eye()
 
 QImage Eye::takePicture()
 {
+    if(!cameraInitialized)
+        return QImage();
+
     int rc;
 
     rc = camera_auto_focus(camera, cameraContext, 1);
@@ -35,14 +38,37 @@ QImage Eye::takePicture()
         printf("Error: %s\n", gp_result_as_string(rc));
     }
 
-    gp_camera_capture(camera, GP_CAPTURE_IMAGE, &path, cameraContext);
+    // take picture
+    rc = gp_camera_capture(camera, GP_CAPTURE_IMAGE, &path, cameraContext);
+    if(rc != GP_OK)
+    {
+        printf("Error: %s\n", gp_result_as_string(rc));
+        closeCamera();
+        return QImage();
+    }
+
     gp_file_new(&file);
-    gp_camera_file_get(camera, path.folder, path.name, GP_FILE_TYPE_NORMAL, file, cameraContext);
-    gp_camera_file_delete(camera, path.folder, path.name, cameraContext);
+    rc = gp_camera_file_get(camera, path.folder, path.name, GP_FILE_TYPE_NORMAL, file, cameraContext);
+    if(rc != GP_OK)
+    {
+        printf("Error: %s\n", gp_result_as_string(rc));
+        closeCamera();
+        return QImage();
+    }
+
+    rc = gp_camera_file_delete(camera, path.folder, path.name, cameraContext);
+    if(rc != GP_OK)
+    {
+        printf("Error: %s\n", gp_result_as_string(rc));
+    }
 
     rc = gp_file_get_data_and_size(file, &data, &size);
-    if(rc != 0)
-        printf("Error getting data; code %i: %s\n", rc, gp_result_as_string(rc));
+    if(rc != GP_OK)
+    {
+        printf("Error: %s\n", gp_result_as_string(rc));
+        closeCamera();
+        return QImage();
+    }
 
     QImage image = QImage::fromData((uchar*) data, size);
 
@@ -98,6 +124,11 @@ bool Eye::initCamera()
     return true;
 }
 
+bool Eye::isCameraInitialized()
+{
+    return cameraInitialized;
+}
+
 void Eye::closeCamera()
 {
     printf("Closing camera ...\n");
@@ -105,6 +136,8 @@ void Eye::closeCamera()
     // close camera
     gp_camera_unref(camera);
     gp_context_unref(cameraContext);
+
+    cameraInitialized = false;
 
     printf(" finished.\n");
 }

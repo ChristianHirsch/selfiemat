@@ -70,6 +70,7 @@ void Photo::selectPrinter()
         return;
 
     printf("Selected printer: %s\n", printer->printerName().toStdString().c_str());
+//    printer->setOutputFormat(QPrinter::NativeFormat);
 
     isPrinterInitialized = true;
 }
@@ -86,6 +87,7 @@ void Photo::initializePrinter()
     if(!printer)
         printer = new QPrinter();
 
+    /*
     printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
     printer->setFullPage(true);
     printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
@@ -95,6 +97,7 @@ void Photo::initializePrinter()
     printer->setFullPage(true);
 
     isPrinterInitialized = false;
+    */
 }
 
 float Photo::getPageWidth() const
@@ -115,6 +118,14 @@ float Photo::getPageHeight() const
 void Photo::setPageHeight(float value)
 {
     pageHeight = value;
+}
+
+
+QPrinter::PrinterState Photo::getPrinterState()
+{
+    if(!printer)
+        return QPrinter::Error;
+    return printer->printerState();
 }
 
 void Photo::createDocument()
