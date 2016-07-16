@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     eye.cpp \
     scene.cpp \
     common.cpp \
-    screen.cpp
+    screen.cpp \
+    focus.c
 
 HEADERS += \
     mainwindow.h \
@@ -32,7 +33,8 @@ HEADERS += \
     eye.h \
     scene.h \
     common.h \
-    screen.h
+    screen.h \
+    focus.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += libgphoto2

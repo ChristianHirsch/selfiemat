@@ -26,9 +26,7 @@ public slots:
     void togglePreview();
     void findAndInitCamera();
 
-    void startScene();
     void takeScenePicture();
-    void endScene();
 
     void loadScene();
     void selectAndShowNextScene();
@@ -45,11 +43,14 @@ protected:
     QTimer previewTimer;
     QTimer sceneTimer;
     QTimer camInitTimer;
+    QTimer stateTimer;
 
 private:
     QPushButton *previewBtn;
     QAction *selectPrinterAction, *loadSceneAction,
       *setWorkDirectoryPathAction, *setFileBaseNameAction;
+
+    QImage idle, smile;
 
     void initActions();
 
@@ -57,6 +58,21 @@ private:
     void stopPreview();
 
     void contextMenuEvent(QContextMenuEvent *_event);
+
+    enum
+    {
+        IDLE = 0,
+        SELECT_SCENE,
+        TAKE_PREVIEW,
+        TAKE_PIC_PREVIEW,
+        SMILE,
+        TAKE_PIC,
+        PAUSE_PIC,
+        PRINT
+    } state;
+
+private slots:
+    void stateChange();
 };
 
 #endif // MAINWINDOW_H

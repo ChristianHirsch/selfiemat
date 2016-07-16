@@ -1,4 +1,8 @@
 #include "eye.h"
+extern "C"
+{
+    #include "focus.h"
+}
 
 void error_func (GPContext *context, const char *format, va_list args, void *data) {
     fprintf(stderr, "*** Contexterror ***\n");
@@ -24,6 +28,13 @@ Eye::~Eye()
 QImage Eye::takePicture()
 {
     int rc;
+
+    rc = camera_auto_focus(camera, cameraContext, 1);
+    if(rc != GP_OK)
+    {
+        printf("Error: %s\n", gp_result_as_string(rc));
+    }
+
     gp_camera_capture(camera, GP_CAPTURE_IMAGE, &path, cameraContext);
     gp_file_new(&file);
     gp_camera_file_get(camera, path.folder, path.name, GP_FILE_TYPE_NORMAL, file, cameraContext);

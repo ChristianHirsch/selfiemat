@@ -14,19 +14,25 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 
-MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
+#define TIME_PREVIEW 200
+
+MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
+    idle("icons/press.png"),
+    smile("icons/smile.png")
 {
+    setMinimumSize(480, 320);
+
     QVBoxLayout *layout = new QVBoxLayout;
     setLayout(layout);
 
+    screen.setMinimumSize(240, 160);
     layout->addWidget(&screen);
-    screen.setMinimumSize(420, 280);
 
     previewBtn = new QPushButton;
     previewBtn->setText("Preview");
     connect(previewBtn, SIGNAL(clicked()), this, SLOT(togglePreview()));
     previewBtn->setEnabled(false);
-    layout->addWidget(previewBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
+//    layout->addWidget(previewBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
     connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
@@ -44,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     QDir workDir(Common::getWorkDirectoryPath());
     if(!workDir.mkpath(Common::getWorkDirectoryPath()))
         printf("Error creating working directory \"%s\"", workDir.absolutePath().toStdString().c_str());
+
+    stateTimer.setSingleShot(true);
 }
 
 MainWindow::~MainWindow()
@@ -71,46 +79,25 @@ void MainWindow::findAndInitCamera()
     if(!eye.initCamera())
         return;
 
-    connect(&screen, SIGNAL(clickedCenter()), this, SLOT(startScene()));
-    connect(&screen, SIGNAL(clickedRight()), this, SLOT(selectAndShowNextScene()));
-    connect(&screen, SIGNAL(clickedLeft()), this, SLOT(selectAndShowPrevScene()));
-
-    previewBtn->setEnabled(true);
-
     camInitTimer.stop();
-}
+    stateTimer.stop();
 
-void MainWindow::startScene()
-{
-    disconnect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
-    Common::getScene()->clear();
-    sceneTimer.start(1500);
-    connect(&sceneTimer, SIGNAL(timeout()), this, SLOT(takeScenePicture()));
+    connect(&stateTimer, SIGNAL(timeout()), this, SLOT(stateChange()));
+
+    state = IDLE;
+    stateChange();
 }
 
 void MainWindow::takeScenePicture()
 {
-    if(Common::getScene()->imagesToAdd() <= 0)
-        return endScene();
-
     QImage image = eye.takePicture();
     screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
     Common::getScene()->addImage(image);
-}
 
-void MainWindow::endScene()
-{
-    sceneTimer.stop();
-    disconnect(&sceneTimer, SIGNAL(timeout()), this, SLOT(takeScenePicture()));
-
-    Common::getScene()->paint();
-    showImage(Common::getScene()->getSceneImage());
-
-    Photo photo;
-    photo.setScene(Common::getScene());
-    photo.print();
-
-    connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
+    if(Common::getScene()->imagesToAdd() <= 0)
+        state = PRINT;
+    else
+        state = TAKE_PIC_PREVIEW;
 }
 
 void MainWindow::loadScene()
@@ -166,12 +153,84 @@ void MainWindow::initActions()
 
 void MainWindow::startPreview()
 {
-    previewTimer.start(200);
+    previewTimer.start(TIME_PREVIEW);
 }
 
 void MainWindow::stopPreview()
 {
     previewTimer.stop();
+}
+
+void MainWindow::stateChange()
+{
+    switch(state)
+    {
+        case IDLE:
+            printf("idle state\n");
+
+            showImage(idle);
+            Common::getScene()->clear();
+            connect(&screen, SIGNAL(clickedCenter()), this, SLOT(stateChange()));
+
+            state = SELECT_SCENE;
+            break;
+
+        case SELECT_SCENE:
+            printf("select scene state\n");
+
+            showImage(Common::getScene()->getPreviewImage());
+            connect(&screen, SIGNAL(clickedRight()), this, SLOT(selectAndShowNextScene()));
+            connect(&screen, SIGNAL(clickedLeft()), this, SLOT(selectAndShowPrevScene()));
+
+            state = TAKE_PIC_PREVIEW;
+            break;
+
+        case TAKE_PREVIEW:
+            break;
+
+        case TAKE_PIC_PREVIEW:
+            printf("take pic preview state\n");
+
+            disconnect(&screen, SIGNAL(clickedRight()), this, SLOT(selectAndShowNextScene()));
+            disconnect(&screen, SIGNAL(clickedLeft()), this, SLOT(selectAndShowPrevScene()));
+            disconnect(&screen, SIGNAL(clickedCenter()), this, SLOT(stateChange()));
+
+            startPreview();
+            stateTimer.start(3000);
+            state = SMILE;
+            break;
+
+        case SMILE:
+            printf("take picture state\n");
+            stopPreview();
+
+            showImage(smile);
+
+            state = TAKE_PIC;
+            stateTimer.start(1000);
+            break;
+
+        case TAKE_PIC:
+            printf("take picture state\n");
+
+            takeScenePicture();
+            stateTimer.start(1000);
+            break;
+
+        case PRINT:
+            printf("print state\n");
+
+            Common::getScene()->paint();
+            showImage(Common::getScene()->getSceneImage());
+
+            Photo photo;
+            photo.setScene(Common::getScene());
+            photo.print();
+
+            state = IDLE;
+            stateTimer.start(5000);
+            break;
+    }
 }
 
 void MainWindow::contextMenuEvent(QContextMenuEvent *_event)
