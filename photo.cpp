@@ -52,9 +52,19 @@ void Photo::print()
         printer->setOutputFileName(fileName);
     }
     createDocument();
+
+    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
+    printer->setColorMode(QPrinter::Color);
+    printer->setResolution(300);
+    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+//    printer->setFullPage(true);
+    printer->setOrientation(QPrinter::Landscape);
+    printer->setCopyCount(1);
+    printer->setOutputFormat(QPrinter::NativeFormat);
+//    printer->setOutputFileName(originalFileName);
+
     document.print(printer);
 
-    printer->setOutputFileName(originalFileName);
 }
 
 void Photo::selectPrinter()
