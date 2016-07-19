@@ -13,6 +13,8 @@ public:
     explicit Screen( const QString& text="", QWidget* parent=0 );
     ~Screen();
 
+    void drawSelectArrows();
+
 signals:
     void clicked();
     void clickedLeft();

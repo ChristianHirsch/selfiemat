@@ -11,6 +11,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTimer>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
 class MainWindow : public QWidget
 {
@@ -47,15 +49,31 @@ protected:
 
 private:
     QPushButton *previewBtn;
+    QLabel *copyCountLabel;
     QAction *selectPrinterAction, *loadSceneAction,
       *setWorkDirectoryPathAction, *setFileBaseNameAction;
+    QWidget printWidget;
+    QWidget stdWidget;
 
-    QImage idle, loading, smile, noPrinter, noCamera;
+    QHBoxLayout mainLayout;
+    QVBoxLayout printLayout;
+    QHBoxLayout stdLayout;
 
+    QImage idle, loading, noPrinter, noCamera, printing, smile;
+
+    int copyCount;
+
+    void createStdLayout();
+    void createPrintLayout();
     void initActions();
+
+    void showPrintWidget();
+    void showStdWidget();
 
     void startPreview();
     void stopPreview();
+
+    void setCopyCount(int _cnt);
 
     void contextMenuEvent(QContextMenuEvent *_event);
 
@@ -69,6 +87,7 @@ private:
         TAKE_PIC,
         PAUSE_PIC,
         PRINT,
+        SELECT_COPY_COUNT,
         PRINTING,
 
         ERROR_CAMERA,
@@ -77,6 +96,9 @@ private:
 
 private slots:
     void stateChange();
+
+    void incCopyCount();
+    void decCopyCount();
 };
 
 #endif // MAINWINDOW_H

@@ -75,8 +75,8 @@ void Scene::paint()
 
         painter.drawImage(target, element.image, source);
 
-        printf("Target: %f / %f / %f / %f\n", target.x(), target.y(), target.width(), target.height());
-        printf("Source: %f / %f / %f / %f\n", source.x(), source.y(), source.width(), source.height());
+        //printf("Target: %f / %f / %f / %f\n", target.x(), target.y(), target.width(), target.height());
+        //printf("Source: %f / %f / %f / %f\n", source.x(), source.y(), source.width(), source.height());
     }
 
     painter.drawImage(image.rect(), background);

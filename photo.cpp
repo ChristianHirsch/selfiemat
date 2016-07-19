@@ -53,14 +53,15 @@ void Photo::print()
     }
     createDocument();
 
-    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
-    printer->setColorMode(QPrinter::Color);
-    printer->setResolution(300);
-    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-//    printer->setFullPage(true);
-    printer->setOrientation(QPrinter::Landscape);
-    printer->setCopyCount(1);
-    printer->setOutputFormat(QPrinter::NativeFormat);
+//    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
+    printer->setPaperSize(QPrinter::Postcard);
+//    printer->setColorMode(QPrinter::GrayScale);
+//    printer->setResolution(300);
+//    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer->setFullPage(true);
+    printer->setOrientation(QPrinter::Portrait);
+//    printer->setCopyCount(1);
+//    printer->setOutputFormat(QPrinter::PdfFormat);
 //    printer->setOutputFileName(originalFileName);
 
     document.print(printer);

@@ -11,8 +11,9 @@
 #include <QDir>
 #include <QMenu>
 #include <QImage>
-#include <QVBoxLayout>
 #include <QPushButton>
+#include <QPainter>
+#include <QVBoxLayout>
 
 #define TIME_PREVIEW 200
 
@@ -21,21 +22,19 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
     loading("icons/loading.png"),
     noCamera("icons/no_camera.png"),
     noPrinter("icons/no_printer.png"),
-    smile("icons/smile.png")
+    printing("icons/printing.png"),
+    smile("icons/smile.png"),
+    copyCount(1)
 {
     setMinimumSize(480, 320);
 
-    QVBoxLayout *layout = new QVBoxLayout;
-    setLayout(layout);
-
-    screen.setMinimumSize(240, 160);
-    layout->addWidget(&screen);
+    createStdLayout();
+    createPrintLayout();
 
     previewBtn = new QPushButton;
     previewBtn->setText("Preview");
     connect(previewBtn, SIGNAL(clicked()), this, SLOT(togglePreview()));
     previewBtn->setEnabled(false);
-//    layout->addWidget(previewBtn, 1, Qt::AlignBottom | Qt::AlignHCenter);
 
     connect(&previewTimer, SIGNAL(timeout()), this, SLOT(updatePreview()));
     connect(&camInitTimer, SIGNAL(timeout()), this, SLOT(findAndInitCamera()));
@@ -55,6 +54,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
 
     stateTimer.setSingleShot(true);
     connect(&stateTimer, SIGNAL(timeout()), this, SLOT(stateChange()));
+
+    mainLayout.setSpacing(0);
+    mainLayout.setContentsMargins(0,0,0,0);
+    setLayout(&mainLayout);
 
     // initialize camera
     state = ERROR_CAMERA;
@@ -123,12 +126,14 @@ void MainWindow::selectAndShowNextScene()
 {
     Scene *scene = Common::getNextScene();
     showImage(scene->getPreviewImage());
+    screen.drawSelectArrows();
 }
 
 void MainWindow::selectAndShowPrevScene()
 {
     Scene *scene = Common::getPrevScene();
     showImage(scene->getPreviewImage());
+    screen.drawSelectArrows();
 }
 
 void MainWindow::showImage(const QImage &_image)
@@ -147,6 +152,86 @@ void MainWindow::openContextMenu(const QPoint &_pos)
     menu.addAction(setWorkDirectoryPathAction);
     menu.addAction(setFileBaseNameAction);
     menu.exec(_pos);
+}
+
+void MainWindow::showPrintWidget()
+{
+    stdWidget.hide();
+    printWidget.show();
+}
+
+void MainWindow::showStdWidget()
+{
+    printWidget.hide();
+    stdWidget.show();
+}
+
+void MainWindow::createStdLayout()
+{
+    stdLayout.setSpacing(0);
+    stdLayout.setContentsMargins(0,0,0,0);
+
+
+    screen.setMinimumSize(240, 160);
+    stdLayout.addWidget(&screen);
+
+    stdWidget.setLayout(&stdLayout);
+    mainLayout.addWidget(&stdWidget);
+
+    QPalette pal(palette());
+    pal.setColor(QPalette::Background, Qt::black);
+    stdWidget.setAutoFillBackground(true);
+    stdWidget.setPalette(pal);
+
+    stdWidget.show();
+}
+
+void MainWindow::createPrintLayout()
+{
+    QHBoxLayout *btnLayout = new QHBoxLayout;
+    QPushButton *plusBtn = new QPushButton("+");
+    QPushButton *minusBtn = new QPushButton("-");
+    QPushButton *printBtn = new QPushButton("Print");
+
+    plusBtn->setMinimumSize(50, 50);
+    minusBtn->setMinimumSize(50, 50);
+    printBtn->setMinimumHeight(50);
+    
+    btnLayout->setSpacing(0);
+    btnLayout->setContentsMargins(0,0,0,0);
+
+    printLayout.setSpacing(0);
+    printLayout.setContentsMargins(0,0,0,0);
+
+    copyCountLabel = new QLabel(QString::number(copyCount));
+
+    printWidget.setStyleSheet(""
+            "QLabel { font-size: 30pt; background-color: black; color: white; }"
+            "QPushButton { font-size: 30pt; font-weight: bold; }"
+            );
+    plusBtn->setStyleSheet("QPushButton { background-color: green }");
+    minusBtn->setStyleSheet("QPushButton { background-color: red }");
+
+    btnLayout->addWidget(minusBtn, 0, Qt::AlignVCenter | Qt::AlignLeft);
+    btnLayout->addWidget(copyCountLabel, 1, Qt::AlignVCenter | Qt::AlignHCenter);
+    btnLayout->addWidget(plusBtn, 0, Qt::AlignVCenter | Qt::AlignLeft);
+
+    printLayout.addLayout(btnLayout);
+    printLayout.addWidget(printBtn, 0, Qt::AlignBottom | Qt::AlignHCenter);
+
+    connect(plusBtn, SIGNAL(clicked()), this, SLOT(incCopyCount()));
+    connect(minusBtn, SIGNAL(clicked()), this, SLOT(decCopyCount()));
+    connect(printBtn, SIGNAL(clicked()), this, SLOT(stateChange()));
+
+    printWidget.setLayout(&printLayout);
+    printWidget.hide();
+
+    QPalette pal(palette());
+    pal.setColor(QPalette::Background, Qt::black);
+    printWidget.setAutoFillBackground(true);
+    printWidget.setPalette(pal);
+
+    mainLayout.addWidget(&printWidget);
 }
 
 void MainWindow::initActions()
@@ -174,9 +259,14 @@ void MainWindow::stopPreview()
     previewTimer.stop();
 }
 
+void MainWindow::setCopyCount(int _cnt)
+{
+    copyCount = _cnt;
+    copyCountLabel->setText(QString::number(copyCount));
+}
+
 void MainWindow::stateChange()
 {
-
     static State prevState;
     static Photo photo;
 
@@ -185,6 +275,7 @@ void MainWindow::stateChange()
         case IDLE:
             printf("idle state\n");
 
+            showStdWidget();
             showImage(idle);
             Common::getScene()->clear();
             connect(&screen, SIGNAL(clickedCenter()), this, SLOT(stateChange()));
@@ -196,6 +287,7 @@ void MainWindow::stateChange()
             printf("select scene state\n");
 
             showImage(Common::getScene()->getPreviewImage());
+            screen.drawSelectArrows();
             connect(&screen, SIGNAL(clickedRight()), this, SLOT(selectAndShowNextScene()));
             connect(&screen, SIGNAL(clickedLeft()), this, SLOT(selectAndShowPrevScene()));
 
@@ -264,24 +356,44 @@ void MainWindow::stateChange()
                 state = ERROR_PRINTER;
                 stateChange();
             }
-            photo.print();
 
-            state = PRINTING;
+            state = SELECT_COPY_COUNT;
             stateTimer.start(5000);
             break;
 
+        case SELECT_COPY_COUNT:
+            printf("select copy count state\n");
+
+            setCopyCount(1);
+            showPrintWidget();
+
+            state = PRINTING;
+            break;
+
         case PRINTING:
-            printf("printing state\n");
             QPrinter::PrinterState printerState = photo.getPrinterState();
-            if(printerState == QPrinter::Idle)
-                state = IDLE;
-            else if(printerState == QPrinter::Error)
+            printf("printing state: %i\n", printerState);
+            showStdWidget();
+
+            if(printerState == QPrinter::Error)
             {
                 prevState = PRINTING;
                 state = ERROR_PRINTER;
+                stateChange();
+            }
+            else if(copyCount > 0)
+            {
+                photo.print();
+                copyCount--;
+                showImage(printing);
+                stateTimer.start(50000);
+            }
+            else //if(printerState == QPrinter::Idle)
+            {
+                state = IDLE;
+                stateTimer.start(1000);
             }
 
-            stateTimer.start(500);
             break;
     }
 }
@@ -289,4 +401,14 @@ void MainWindow::stateChange()
 void MainWindow::contextMenuEvent(QContextMenuEvent *_event)
 {
     openContextMenu(_event->globalPos());
+}
+
+void MainWindow::incCopyCount()
+{
+    setCopyCount(qMin(copyCount + 1, (int) 6));
+}
+
+void MainWindow::decCopyCount()
+{
+    setCopyCount(qMax(copyCount - 1, (int) 0));
 }
