@@ -50,7 +50,7 @@ private:
     QAction *selectPrinterAction, *loadSceneAction,
       *setWorkDirectoryPathAction, *setFileBaseNameAction;
 
-    QImage idle, smile, noPrinter, noCamera;
+    QImage idle, loading, smile, noPrinter, noCamera;
 
     void initActions();
 

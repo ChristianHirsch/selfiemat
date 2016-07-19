@@ -18,6 +18,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
     idle("icons/press.png"),
+    loading("icons/loading.png"),
     noCamera("icons/no_camera.png"),
     noPrinter("icons/no_printer.png"),
     smile("icons/smile.png")
@@ -69,7 +70,10 @@ MainWindow::~MainWindow()
 void MainWindow::updatePreview()
 {
     QImage image = eye.takePreview();
-    screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
+    if(image.isNull())
+        showImage(loading);
+    else
+        screen.setPixmap(QPixmap::fromImage(image).scaled(screen.width(), screen.height(), Qt::KeepAspectRatio));
 }
 
 void MainWindow::togglePreview()
