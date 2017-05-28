@@ -18,7 +18,7 @@ public:
 
     void setScene(Scene *_scene);
     void save(const std::string &_path);
-    void print();
+    void print(int copyCount = 1);
 
     float getPageWidth() const;
     void setPageWidth(float value);

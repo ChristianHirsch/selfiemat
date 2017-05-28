@@ -88,6 +88,16 @@ void Scene::save(const QString &_path)
     image.save(_path);
 }
 
+void Scene::saveSceneImages(const QString &_path, const QString &_ending)
+{
+    int i = 0;
+    for (const ImageElement &element : imageElements)
+    {
+        element.image.save(_path + "_" + QString::number(i) + _ending);
+        i++;
+    }
+}
+
 void Scene::loadScene(const QString &_filePath)
 {
     QFile scene(_filePath);

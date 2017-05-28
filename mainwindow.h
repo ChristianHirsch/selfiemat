@@ -59,7 +59,7 @@ private:
     QVBoxLayout printLayout;
     QHBoxLayout stdLayout;
 
-    QImage idle, loading, noPrinter, noCamera, printing, smile;
+    QImage idle, loading, noPrinter, noCamera, wait, smile;
 
     int copyCount;
 

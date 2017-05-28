@@ -35,7 +35,7 @@ void Photo::setScene(Scene *_scene)
     scene = _scene;
 }
 
-void Photo::print()
+void Photo::print(int copyCount)
 {
     QString originalFileName = printer->outputFileName();
 
@@ -53,19 +53,21 @@ void Photo::print()
     }
     createDocument();
 
-//    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
-    printer->setPaperSize(QPrinter::Postcard);
-//    printer->setColorMode(QPrinter::GrayScale);
+    printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
+//    printer->setPaperSize(QPrinter::Postcard);
+    printer->setColorMode(QPrinter::Color);
 //    printer->setResolution(300);
-//    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
+    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
     printer->setFullPage(true);
-    printer->setOrientation(QPrinter::Portrait);
-//    printer->setCopyCount(1);
-//    printer->setOutputFormat(QPrinter::PdfFormat);
-//    printer->setOutputFileName(originalFileName);
+    if(pageWidth < pageHeight)
+        printer->setOrientation(QPrinter::Portrait);
+    else
+        printer->setOrientation(QPrinter::Landscape);
 
-    document.print(printer);
+    printer->setCopyCount(copyCount);
 
+    if(copyCount > 0)
+        document.print(printer);
 }
 
 void Photo::selectPrinter()
@@ -148,7 +150,7 @@ void Photo::createDocument()
     document.clear();
     document.setIndentWidth(0);
     document.setDocumentMargin(0);
-    document.setPageSize(QSize(printer->widthMM(), printer->heightMM()));
+    document.setPageSize(QSize(pageWidth, pageHeight));
 
     string html = "<img width=" + to_string(printer->widthMM())
             + " height=" + to_string(printer->heightMM())
@@ -162,4 +164,5 @@ void Photo::paintImage()
 {
     scene->paint();
     scene->save(getAbsoluteStampedFileName(".png"));
+    scene->saveSceneImages(getAbsoluteStampedFileName(""), ".jpg");
 }

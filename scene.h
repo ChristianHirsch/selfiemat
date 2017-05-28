@@ -18,6 +18,7 @@ public:
     void clear();
     void paint();
     void save(const QString &_path);
+    void saveSceneImages(const QString &_path, const QString &_ending);
 
     void loadScene(const QString &_filePath);
 

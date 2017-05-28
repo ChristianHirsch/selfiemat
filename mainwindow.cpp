@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent),
     loading("icons/loading.png"),
     noCamera("icons/no_camera.png"),
     noPrinter("icons/no_printer.png"),
-    printing("icons/printing.png"),
+    wait("icons/wait.png"),
     smile("icons/smile.png"),
     copyCount(1)
 {
@@ -372,27 +372,25 @@ void MainWindow::stateChange()
 
         case PRINTING:
             QPrinter::PrinterState printerState = photo.getPrinterState();
-            printf("printing state: %i\n", printerState);
-            showStdWidget();
 
-            if(printerState == QPrinter::Error)
-            {
-                prevState = PRINTING;
-                state = ERROR_PRINTER;
-                stateChange();
-            }
-            else if(copyCount > 0)
-            {
-                photo.print();
-                copyCount--;
-                showImage(printing);
-                stateTimer.start(50000);
-            }
-            else //if(printerState == QPrinter::Idle)
-            {
-                state = IDLE;
-                stateTimer.start(1000);
-            }
+            showStdWidget();
+            showImage(wait);
+            repaint();
+
+            printf("printing state\n");
+            printf("Copy count: %d\nPrinting...\n");
+
+            photo.print(copyCount);
+            printf("Printing finished.");
+
+            int timer = 50000 * copyCount;
+            if(copyCount == 0)
+                timer = 1000;
+
+            printf("Printing %d samples. Wakeup in %d ms.\n", copyCount, timer);
+
+            state = IDLE;
+            stateTimer.start(timer);
 
             break;
     }

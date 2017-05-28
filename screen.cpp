@@ -23,18 +23,18 @@ void Screen::drawSelectArrows()
 
     painter.fillRect(0, 0, width(), height(), Qt::black);
 
-    QRectF rectL = QRectF(0, 0, width() / 5, height());
-    QRectF rectR = QRectF(width() - width() / 5, 0, width() / 5, height());
+    QRectF rectL = QRectF(0, height()/3, width() / 5, height()/3);
+    QRectF rectR = QRectF(width() - width() / 5, height()/3, width() / 5, height()/3);
 
     QPainterPath triangleL, triangleR;
 
     triangleL.moveTo(rectL.topRight());
-    triangleL.lineTo(0, rectL.height() / 2);
+    triangleL.lineTo(0, height() / 2);
     triangleL.lineTo(rectL.bottomRight());
     triangleL.lineTo(rectL.topRight());
 
     triangleR.moveTo(rectR.topLeft());
-    triangleR.lineTo(rectR.right(), rectR.height() / 2);
+    triangleR.lineTo(rectR.right(), height() / 2);
     triangleR.lineTo(rectR.bottomLeft());
     triangleR.lineTo(rectR.topLeft());
 
