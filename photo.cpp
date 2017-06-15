@@ -51,14 +51,19 @@ void Photo::print(int copyCount)
 
         printer->setOutputFileName(fileName);
     }
-    createDocument();
+    //    createDocument();
 
+    paintImage();
+
+    if(copyCount < 1)
+        return;
+    
+    printer->setPaperSize(QSizeF(pageHeight, pageWidth), QPrinter::Millimeter);
     printer->setPageSizeMM(QSizeF(pageHeight, pageWidth));
-//    printer->setPaperSize(QPrinter::Postcard);
+    //    printer->setPaperSize(QPrinter::Postcard);
     printer->setColorMode(QPrinter::Color);
-//    printer->setResolution(300);
-    printer->setPageMargins(0, 0, 0, 0, QPrinter::Millimeter);
-    printer->setFullPage(true);
+    printer->setResolution(300);
+    printer->setPageMargins(1.925, 0.89, 8, 4.275, QPrinter::Millimeter);
     if(pageWidth < pageHeight)
         printer->setOrientation(QPrinter::Portrait);
     else
@@ -66,14 +71,20 @@ void Photo::print(int copyCount)
 
     printer->setCopyCount(copyCount);
 
-    if(copyCount > 0)
-        document.print(printer);
+    QPainter printPainter;
+    printPainter.begin(printer);
+    QImage sceneImage = scene->getSceneImage();
+    printPainter.drawImage(
+        printer->pageLayout().paintRectPixels(300),
+        sceneImage,
+        sceneImage.rect());
+    printPainter.end();
 }
 
 void Photo::selectPrinter()
 {
     if(!printer)
-        printer = new QPrinter();
+        printer = new QPrinter(QPrinter::HighResolution);
 
     printf("Selecting printer...\n");
     QPrintDialog *dialog = new QPrintDialog(printer);
