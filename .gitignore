@@ -1,3 +1,6 @@
+*.o
 Makefile
+moc_*.cpp
+moc_*.o
 selfiemat
 selfiemat.pro.user
