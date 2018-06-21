@@ -17,6 +17,10 @@ CONFIG += c++11
 
 TEMPLATE = app
 
+inst.path = /opt/selfiemat
+inst.files += selfiemat
+inst.files += icons
+INSTALLS += inst
 
 SOURCES += main.cpp \
     mainwindow.cpp \
