@@ -51,7 +51,7 @@ private:
     QPushButton *previewBtn;
     QLabel *copyCountLabel;
     QAction *selectPrinterAction, *loadSceneAction,
-      *setWorkDirectoryPathAction, *setFileBaseNameAction;
+      *setWorkDirectoryPathAction, *setFileBaseNameAction, *quitApplicationAction;
     QWidget printWidget;
     QWidget stdWidget;
 
@@ -59,12 +59,13 @@ private:
     QVBoxLayout printLayout;
     QHBoxLayout stdLayout;
 
-    QImage idle, loading, noPrinter, noCamera, wait, smile;
+    QImage idle, loading, noPrinter, noCamera, wait, smile, printing, countdown[3];
 
     int copyCount;
 
     void createStdLayout();
     void createPrintLayout();
+    void createSimplePrintLayout();
     void initActions();
 
     void showPrintWidget();
@@ -96,6 +97,11 @@ private:
 
 private slots:
     void stateChange();
+    void setCopyCountAndChangeState(int _cnt);
+    void setNoCopyAndChangeState(void);
+    void setOneCopyAndChangeState(void);
+    void setTwoCopiesAndChangeState(void);
+    void setFourCopiesAndChangeState(void);
 
     void incCopyCount();
     void decCopyCount();
