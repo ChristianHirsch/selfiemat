@@ -208,8 +208,9 @@ void Scene::setTemplateLocation(const QString &_templateLocation)
 QRectF Scene::getSourceFromImage(const QImage &_image, const QRectF &_target)
 {
     float ratio = _target.width() / _target.height();
+    float img_ratio = (float)_image.width() / (float)_image.height();
 
-    if(_target.width() < _target.height())
+    if(ratio < img_ratio)
     {
         float width = (float)_image.height() * ratio;
 
